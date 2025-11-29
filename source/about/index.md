@@ -50,7 +50,7 @@ Website ini dibuat untuk:
 
 Jika ada pertanyaan atau ingin berdiskusi tentang CTF, silakan hubungi saya melalui:
 
-- GitHub: [2byte](https://github.com/2byte)
+- GitHub: [2byte](https://github.com/2byte36)
 
 ---
 

@@ -12,7 +12,7 @@ timezone: 'Asia/Jakarta'
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://2byte.github.io
+url: https://2byte36.github.io
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
@@ -88,7 +88,7 @@ theme: reimu
 # Deployment
 deploy:
   type: git
-  repo: https://github.com/2byte/2byte.github.io.git
+  repo: https://github.com/2byte36/2byte36.github.io.git
   branch: gh-pages
 
 # Feed

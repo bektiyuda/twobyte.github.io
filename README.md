@@ -2,7 +2,7 @@
 
 Website archive write-up CTF dengan tema Roronoa Zoro.
 
-🌐 **Live**: [https://2byte.github.io](https://2byte.github.io)
+🌐 **Live**: [https://2byte36.github.io](https://2byte36.github.io)
 
 ## Quick Start
 
