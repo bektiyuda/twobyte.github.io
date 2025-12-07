@@ -1,5 +1,76 @@
 ---
+import { getCollection } from "astro:content";
+import BlogPostCard from "@/components/BlogPostCard.astro";
+import Section from "@/components/Section.astro";
+import Layout from "@/layouts/Layout.astro";
+
+const allPosts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const postsPerPage = 6;
+const posts = allPosts.slice(0, postsPerPage);
+const totalPages = Math.ceil(allPosts.length / postsPerPage);
+const currentPage = 1;
 ---
-<script>
-  window.location.href = '/blog/1';
-</script>
+
+<Layout title="My Own Blog Posts">
+  <Section title="My Blog Posts">
+    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+      {
+        posts.map((post) => (
+          <BlogPostCard
+            slug={post.id}
+            title={post.data.title}
+            excerpt={post.data.description}
+            date={post.data.pubDate}
+            heroImage={post.data.heroImage}
+          />
+        ))
+      }
+    </div>
+    
+    <!-- Pagination -->
+    {totalPages > 1 && (
+      <div class="flex justify-center items-center gap-4 mt-8">
+        <button 
+          disabled
+          class="px-4 py-2 text-white/40 cursor-not-allowed"
+        >
+          ←
+        </button>
+        
+        <div class="flex gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <a
+              href={page === 1 ? '/blog' : `/blog/${page}`}
+              class={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                page === currentPage
+                  ? 'bg-white text-black font-semibold'
+                  : 'text-white hover:text-white/60'
+              }`}
+            >
+              {page}
+            </a>
+          ))}
+        </div>
+        
+        {currentPage < totalPages ? (
+          <a
+            href="/blog/2"
+            class="px-4 py-2 text-white hover:text-white/60 transition-all duration-300"
+          >
+            →
+          </a>
+        ) : (
+          <button 
+            disabled
+            class="px-4 py-2 text-white/40 cursor-not-allowed"
+          >
+            →
+          </button>
+        )}
+      </div>
+    )}
+  </Section>
+</Layout>
