@@ -28,11 +28,11 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
     </div>
 
     <!-- Main Content with TOC Sidebar -->
-    <div class="max-w-7xl mx-auto px-4 md:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 relative">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 relative">
+      <div class="lg:flex lg:gap-8 lg:items-start">
         
         <!-- Main Content Area -->
-        <div class="min-w-0">
+        <div class="lg:flex-1 min-w-0">
           <!-- Header -->
           <div class="mb-8">
             <div class="text-white/60 text-sm mb-2">
@@ -58,32 +58,93 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
         </div>
 
         <!-- Table of Contents Sidebar (Desktop Only) -->
-        <aside class="hidden lg:block">
-          <div class="sticky top-24">
-            <div class="border border-white/10 rounded-lg p-4 bg-white/5 backdrop-blur-sm">
+        <div class="hidden lg:block lg:w-64 lg:flex-shrink-0">
+          <div id="toc-wrapper">
+            <nav class="border border-white/10 rounded-lg bg-white/5 backdrop-blur-sm p-3 max-h-[calc(100vh-10rem)] overflow-y-auto scrollbar-thin">
               <h3 class="text-white font-semibold text-sm mb-3 uppercase tracking-wider">On this page</h3>
+              
+              <!-- TOC Content with Nested Collapsible -->
               <nav class="toc">
-                <ul class="space-y-2 text-sm">
-                  {headings.filter(h => h.depth <= 3).map((heading) => (
-                    <li 
-                      class={`
-                        ${heading.depth === 2 ? 'ml-0' : ''}
-                        ${heading.depth === 3 ? 'ml-4' : ''}
-                      `}
-                    >
-                      <a 
-                        href={`#${heading.slug}`}
-                        class="text-white/60 hover:text-white transition-colors duration-200 block py-1 hover:translate-x-1 transition-transform"
-                      >
-                        {heading.text}
-                      </a>
-                    </li>
-                  ))}
+                <ul class="space-y-1 text-sm">
+                  {(() => {
+                    // Simple grouping by parent-child relationship
+                    interface TocNode {
+                      heading: any;
+                      children: TocNode[];
+                    }
+                    
+                    const buildNestedToc = (headings: any[]): TocNode[] => {
+                      const stack: TocNode[] = [];
+                      const root: TocNode[] = [];
+                      
+                      headings.forEach(heading => {
+                        const node: TocNode = { heading, children: [] };
+                        
+                        // Find parent in stack
+                        while (stack.length > 0 && stack[stack.length - 1].heading.depth >= heading.depth) {
+                          stack.pop();
+                        }
+                        
+                        if (stack.length === 0) {
+                          root.push(node);
+                        } else {
+                          stack[stack.length - 1].children.push(node);
+                        }
+                        
+                        stack.push(node);
+                      });
+                      
+                      return root;
+                    };
+                    
+                    const tocTree = buildNestedToc(headings);
+                    let itemCounter = 0;
+                    
+                    const renderNode = (node: TocNode, level = 0): any => {
+                      const hasChildren = node.children.length > 0;
+                      const itemId = `toc-item-${itemCounter++}`;
+                      
+                      return (
+                        <li class="mb-1">
+                          <div class="flex items-start gap-1">
+                            {hasChildren ? (
+                              <button 
+                                class="toc-collapse-btn mt-1.5 text-white/40 hover:text-white transition-colors flex-shrink-0"
+                                data-target={itemId}
+                              >
+                                <svg class="w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                              </button>
+                            ) : (
+                              <span class="w-4 flex-shrink-0"></span>
+                            )}
+                            <a 
+                              href={`#${node.heading.slug}`}
+                              class={`hover:text-white transition-all duration-200 block py-1 flex-1 ${
+                                level === 0 ? 'text-white/60 text-sm' : 'text-white/50 text-xs'
+                              }`}
+                            >
+                              {node.heading.text}
+                            </a>
+                          </div>
+                          
+                          {hasChildren && (
+                            <ul id={itemId} class="toc-section ml-5 space-y-1 mt-1 overflow-hidden transition-all duration-200">
+                              {node.children.map(child => renderNode(child, level + 1))}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    };
+                    
+                    return tocTree.map(node => renderNode(node));
+                  })()}
                 </ul>
-              </nav>
-            </div>
+              </div>
+            </nav>
           </div>
-        </aside>
+        </div>
 
       </div>
     </div>
@@ -96,14 +157,126 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
     scroll-behavior: smooth;
     scroll-padding-top: 100px;
   }
+  
+  #toc-wrapper {
+    transition: none;
+    z-index: 100;
+  }
 
   /* Active TOC highlight */
   .toc a.active {
     @apply text-white font-semibold;
   }
+  
+  .toc a.active span {
+    @apply text-white;
+  }
+
+  /* Custom scrollbar for TOC */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* TOC Section collapsed state */
+  .toc-section.collapsed {
+    max-height: 0 !important;
+    margin-top: 0 !important;
+  }
 </style>
 
 <script>
+  // Manual sticky implementation
+  let tocWrapper: HTMLElement | null = null;
+  let tocContainer: HTMLElement | null = null;
+  let initialTop = 0;
+  let containerLeft = 0;
+  let containerWidth = 0;
+
+  function updateTocPosition() {
+    if (!tocWrapper || !tocContainer) return;
+    
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const headerHeight = 96; // 6rem = 96px
+    
+    if (scrollTop > initialTop - headerHeight) {
+      tocWrapper.style.position = 'fixed';
+      tocWrapper.style.top = headerHeight + 'px';
+      tocWrapper.style.left = containerLeft + 'px';
+      tocWrapper.style.width = containerWidth + 'px';
+    } else {
+      tocWrapper.style.position = 'relative';
+      tocWrapper.style.top = '0';
+      tocWrapper.style.left = '0';
+      tocWrapper.style.width = '100%';
+    }
+  }
+
+  function initStickyToc() {
+    tocWrapper = document.getElementById('toc-wrapper');
+    if (!tocWrapper) return;
+    
+    tocContainer = tocWrapper.parentElement;
+    if (!tocContainer) return;
+    
+    const rect = tocWrapper.getBoundingClientRect();
+    initialTop = window.pageYOffset + rect.top;
+    containerLeft = rect.left;
+    containerWidth = rect.width;
+    
+    window.addEventListener('scroll', updateTocPosition);
+    window.addEventListener('resize', () => {
+      const rect = tocWrapper!.getBoundingClientRect();
+      containerLeft = rect.left;
+      containerWidth = rect.width;
+      updateTocPosition();
+    });
+    
+    updateTocPosition();
+  }
+
+  document.addEventListener('DOMContentLoaded', initStickyToc);
+
+  // TOC Collapsible Sections
+  document.addEventListener('DOMContentLoaded', () => {
+    const collapseButtons = document.querySelectorAll('.toc-collapse-btn');
+    
+    collapseButtons.forEach(btn => {
+      const targetId = btn.getAttribute('data-target');
+      const section = document.getElementById(targetId!);
+      const svg = btn.querySelector('svg');
+      
+      if (section && svg) {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const isCollapsed = section.classList.contains('collapsed');
+          
+          if (isCollapsed) {
+            section.classList.remove('collapsed');
+            section.style.maxHeight = section.scrollHeight + 'px';
+            svg.style.transform = 'rotate(0deg)';
+          } else {
+            section.classList.add('collapsed');
+            section.style.maxHeight = '0';
+            svg.style.transform = 'rotate(-90deg)';
+          }
+        });
+      }
+    });
+  });
+
   // TOC active state on scroll
   document.addEventListener('DOMContentLoaded', () => {
     const observer = new IntersectionObserver(
@@ -123,7 +296,7 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
       { rootMargin: '-100px 0px -80% 0px' }
     );
 
-    document.querySelectorAll('h2, h3').forEach((heading) => {
+    document.querySelectorAll('h2, h3, h4, h5, h6').forEach((heading) => {
       observer.observe(heading);
     });
   });
