@@ -247,10 +247,12 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
     updateTocPosition();
   }
 
+  // Initialize on page load and navigation
   document.addEventListener('DOMContentLoaded', initStickyToc);
+  document.addEventListener('astro:page-load', initStickyToc);
 
   // TOC Collapsible Sections
-  document.addEventListener('DOMContentLoaded', () => {
+  function initCollapsibleToc() {
     const collapseButtons = document.querySelectorAll('.toc-collapse-btn');
     
     collapseButtons.forEach(btn => {
@@ -275,10 +277,13 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
         });
       }
     });
-  });
+  }
+  
+  document.addEventListener('DOMContentLoaded', initCollapsibleToc);
+  document.addEventListener('astro:page-load', initCollapsibleToc);
 
   // TOC active state on scroll
-  document.addEventListener('DOMContentLoaded', () => {
+  function initTocActiveState() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -299,5 +304,8 @@ const { title, pubDate, updatedDate, heroImage, headings = [] } = Astro.props;
     document.querySelectorAll('h2, h3, h4, h5, h6').forEach((heading) => {
       observer.observe(heading);
     });
-  });
+  }
+  
+  document.addEventListener('DOMContentLoaded', initTocActiveState);
+  document.addEventListener('astro:page-load', initTocActiveState);
 </script>
